@@ -119,7 +119,7 @@ class Sort_Filter_Widget extends WP_Widget {
 		<form role="search" class="sersf" method="get" action="<?php echo trailingslashit( home_url() ); ?>">
 			<div class="sersf-search">
 				<label class="screen-reader-text" for="s">Search for:</label>
-				<input type="text" value="post" name="s" id="s">
+				<input type="text" value="<?php echo $_GET['s']; ?>" name="s" id="s">
 			</div>
 			<?php if ( $instance['enable_sort'] ): ?>
 				<div class="sersf-sort">
