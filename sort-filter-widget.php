@@ -74,7 +74,7 @@ class Sort_Filter_Widget extends WP_Widget {
 			add_action( 'pre_get_posts', array( __CLASS__, 'modify_results' ) );
 		}
 		
-		self::$search = wp_parse_args( $_POST, self::$search_defaults );
+		self::$search = wp_parse_args( $_GET, self::$search_defaults );
 	}
 	
 	/**
@@ -117,7 +117,13 @@ class Sort_Filter_Widget extends WP_Widget {
 		// END TEMPORARY CODE
 		
 		?>
-		<form class="sersf" method="POST">
+		<!--<form class="sersf" method="POST">-->
+		<form role="search" class="sersf" method="get" action="<?php echo trailingslashit( home_url() ); ?>">
+			<div>
+				<label class="screen-reader-text" for="s">Search for:</label>
+				<input type="text" value="post" name="s" id="s">
+			</div>
+			<br />
 			<?php if ( $instance['enable_sort'] ): ?>
 				<div class="sersf-sort">
 					Sort By
@@ -279,7 +285,7 @@ class Sort_Filter_Widget extends WP_Widget {
 			
 			<?php if ( ! $instance['autorefresh'] ): ?>
 				<br />
-				<input type="submit" value="Refresh" />
+				<input type="submit" value="Search" />
 			<?php endif; ?>
 			
 			<br />
