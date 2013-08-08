@@ -103,8 +103,6 @@ class Sort_Filter_Widget extends WP_Widget {
 	}
 
 	public function widget( $args, $instance ) {
-		if ( ! is_search() ) return;
-		
 		global $wpdb;
 		wp_enqueue_style( "sersf-view" );
 		
@@ -119,11 +117,10 @@ class Sort_Filter_Widget extends WP_Widget {
 		?>
 		<!--<form class="sersf" method="POST">-->
 		<form role="search" class="sersf" method="get" action="<?php echo trailingslashit( home_url() ); ?>">
-			<div>
+			<div class="sersf-search">
 				<label class="screen-reader-text" for="s">Search for:</label>
 				<input type="text" value="post" name="s" id="s">
 			</div>
-			<br />
 			<?php if ( $instance['enable_sort'] ): ?>
 				<div class="sersf-sort">
 					Sort By
@@ -178,7 +175,6 @@ class Sort_Filter_Widget extends WP_Widget {
 					<?php endif; ?>
 				</div>
 			<?php endif; ?>
-			<br />
 			<?php if ( $instance['enable_filter'] ): ?>
 			<div class="sersf-filter">
 				<?php
@@ -227,9 +223,6 @@ class Sort_Filter_Widget extends WP_Widget {
 							<br />
 							<?php
 						}
-						?>
-						<br />
-						<?php
 					}
 				?>
 				<?php
@@ -284,8 +277,7 @@ class Sort_Filter_Widget extends WP_Widget {
 			<?php endif; ?>
 			
 			<?php if ( ! $instance['autorefresh'] ): ?>
-				<br />
-				<input type="submit" value="Search" />
+				<input type="submit" class="btn" value="Search" />
 			<?php endif; ?>
 			
 			<br />
