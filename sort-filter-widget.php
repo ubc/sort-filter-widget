@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Sort-Filter Widget
-Plugin URI: http://wordpress.org/extend/plugins/sort-filter-widget/
+Plugin URI: https://github.com/ubc/sort-filter-widget
 Description: Adds a widget that allows you to filter and sort search results.
 Author: Devindra Payment, CTLT
 Version: 1.0
