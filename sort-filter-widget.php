@@ -91,14 +91,14 @@ class Sort_Filter_Widget extends WP_Widget {
 	}
 	
 	public function __construct() {
-		parent::__construct( 'sersf', 'Search/Sort/Filter', array(
+		parent::__construct( 'sersf', 'Search / Sort / Filter', array(
 			'description' => __( 'For sorting and filtering search results.', 'sersf' ),
 		) );
 	}
 	
 	public static function shortcode( $atts, $content ) {
 		ob_start();
-		self::widget( null, self::parse( $atts ) );
+		self::widget( null, self::parse( $atts, false ) );
 		return ob_get_clean();
 	}
 
@@ -406,8 +406,14 @@ class Sort_Filter_Widget extends WP_Widget {
 		return array_merge( $old_instance, self::parse( $new_instance ) );
 	}
 	
-	private function parse( $args ) {
-		foreach ( self::$setting_defaults as $key => $value ) {
+	private function parse( $args, $all = true ) {
+		if ( $all ) {
+			$list = self::$setting_defaults;
+		} else {
+			$list = $args;
+		}
+		
+		foreach ( $list as $key => $value ) {
 			if ( is_array( self::$setting_defaults[$key] ) ) {
 				$args[$key] = self::parse_csv( $args[$key] );
 			} elseif ( is_bool( self::$setting_defaults[$key] ) ) {
