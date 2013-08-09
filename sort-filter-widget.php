@@ -51,19 +51,19 @@ class Sort_Filter_Widget extends WP_Widget {
 	 * @static
 	 * @return void
 	 */
-	static function init() {
+	public static function init() {
 		add_shortcode( 'sort_filter_form', array( __CLASS__, 'shortcode' ) );
 		
 		add_action( 'widgets_init', array( __CLASS__, 'register' ) );
 		add_action( 'init', array( __CLASS__, 'load' ) );
 	}
 	
-	static function register() {
+	public static function register() {
 		register_widget( __CLASS__ );
 		self::register_scripts_and_styles();
 	}
 	
-	static function load() {
+	public static function load() {
 		self::$plugins['relevanssi'] = defined( "RELEVANSSI_PREMIUM" );
 		self::$plugins['evaluate'] = defined( "EVAL_BASENAME" );
 		
@@ -84,7 +84,7 @@ class Sort_Filter_Widget extends WP_Widget {
 	 * @static
 	 * @return void
 	 */
-	static function register_scripts_and_styles() {
+	public static function register_scripts_and_styles() {
 		wp_register_script( 'search-sort-filter' , plugins_url( 'sort-filter-widget.js', __FILE__ ), array( 'jquery' ), '1.0', true );
 		wp_register_style( 'sersf-admin' , plugins_url( 'css/admin.css', __FILE__ ) );
 		wp_register_style( 'sersf-view'  , plugins_url( 'css/view.css', __FILE__ ) );
@@ -96,10 +96,17 @@ class Sort_Filter_Widget extends WP_Widget {
 		) );
 	}
 	
-	public function shortcode( $atts, $content ) {
+	public static function shortcode( $atts, $content ) {
 		ob_start();
 		self::widget( null, self::parse( $atts ) );
 		return ob_get_clean();
+	}
+
+	public function update( $new_instance, $old_instance ) {
+		error_log("update");
+		error_log( print_r( $new_instance, TRUE ) );
+		//return array_merge( $old_instance, $new_instance );
+		return array_merge( $old_instance, self::parse( $new_instance ) );
 	}
 
 	public function widget( $args, $instance ) {
@@ -385,12 +392,8 @@ class Sort_Filter_Widget extends WP_Widget {
 		</label>
 		<?php
 	}
-
-	public function update( $new_instance, $old_instance ) {
-		return array_merge( $old_instance, self::parse( $new_instance ) );
-	}
 	
-	static function parse( $args ) {
+	private function parse( $args ) {
 		foreach ( $args as $key => $value ) {
 			if ( isset( $args[$key] ) ) {
 				if ( is_array( self::$setting_defaults[$key] ) ) {
@@ -406,15 +409,15 @@ class Sort_Filter_Widget extends WP_Widget {
 		return $args;
 	}
 	
-	static function parse_bool( $string ) {
+	private function parse_bool( $string ) {
 		return $string === "true" || $string === true || $string === "on";
 	}
 	
-	static function parse_include( $string ) {
+	private function parse_include( $string ) {
 		return $string === 'include' ? 'include' : 'exclude';
 	}
 	
-	static function parse_csv( $string ) {
+	private function parse_csv( $string ) {
 		$array = array();
 		foreach ( explode( ",", $string ) as $index => $value ) {
 			$array[] = trim( $value );
@@ -423,7 +426,7 @@ class Sort_Filter_Widget extends WP_Widget {
 		return $array;
 	}
 	
-	static function modify_results() {
+	public static function modify_results() {
 		global $wp_query;
 		
 		$search = self::$search;
@@ -454,10 +457,9 @@ class Sort_Filter_Widget extends WP_Widget {
 				$wp_query->set( 'orderby', $search['sersf_orderby'] );
 				break;
 		}
-		
 	}
 	
-	static function modify_results_relevanssi( $args ) {
+	public static function modify_results_relevanssi( $args ) {
 		$hits = $args[0];
 		$search = self::$search;
 		
