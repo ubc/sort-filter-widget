@@ -117,170 +117,184 @@ class Sort_Filter_Widget extends WP_Widget {
 		?>
 		<!--<form class="sersf" method="POST">-->
 		<form role="search" class="sersf" method="get" action="<?php echo trailingslashit( home_url() ); ?>">
-			<div class="sersf-search">
-				<label class="screen-reader-text" for="s">Search for:</label>
-				<input type="text" value="<?php echo $_GET['s']; ?>" name="s" id="s">
-			</div>
-			<?php if ( $instance['enable_sort'] ): ?>
-				<div class="sersf-sort">
-					Sort By
-					<br />
-					<?php if ( $instance['enable_orderby'] ): ?>
-						<select name="sersf_orderby" class="sersf-orderby">
-							<?php if ( $instance['enable_relevanssi'] && self::$plugins['relevanssi'] ): ?>
-								<option value="relevanssi" <?php selected( $search['sersf_orderby'] == "relevanssi" ); ?>>
-									Relevance
-								</option>
-							<?php endif; ?>
-							<?php if ( $instance['enable_time'] ): ?>
-								<option value="date" <?php selected( $search['sersf_orderby'] == "date" ); ?>>
-									Date Posted
-								</option>
-							<?php endif; ?>
-							<?php if ( $instance['enable_alpha'] ): ?>
-								<option value="name" <?php selected( $search['sersf_orderby'] == "name" ); ?>>
-									Alphabetical
-								</option>
-							<?php endif; ?>
-							<?php if ( $instance['enable_modified'] ): ?>
-								<option value="modified" <?php selected( $search['sersf_orderby'] == "modified" ); ?>>
-									Date Updated
-								</option>
-							<?php endif; ?>
-							<?php
-								if ( $instance['enable_evaluate'] && self::$plugins['evaluate'] ) {
-									$metric_ids = '"' . implode( '", "', $instance['metrics'] ) . '"';
-									$metrics = $wpdb->get_results( 'SELECT id, nicename FROM '.EVAL_DB_METRICS.' WHERE id IN ('.$metric_ids.') AND type != "poll"' );
-									
-									foreach ( $metrics as $index => $metric ) {
-										?>
-										<option value="evaluate/<?php echo $metric->id; ?>" <?php selected( $search['sersf_orderby'] == "evaluate/".$metric->id ); ?>>
-											Rating (<?php echo $metric->nicename; ?>)
-										</option>
-										<?php
-									}
-								}
-							?>
-						</select>
-					<?php endif; ?>
-					<?php if ( $instance['enable_order'] ): ?>
-						<select name="sersf_order" class="sersf-order">
-							<option value="ASC" <?php selected( $search['sersf_order'] == "ASC" ); ?>>
-								Ascending
-							</option>
-							<option value="DESC" <?php selected( $search['sersf_order'] == "DESC" ); ?>>
-								Descending
-							</option>
-						</select>
-					<?php endif; ?>
+			<div class="sersf-section">
+				<div class="sersf-search">
+					<label class="screen-reader-text" for="s">Search for:</label>
+					<input type="text" value="<?php echo $_GET['s']; ?>" name="s" id="s">
 				</div>
-			<?php endif; ?>
-			<?php if ( $instance['enable_filter'] ): ?>
-			<div class="sersf-filter">
-				<?php
-					if ( $instance['enable_authors'] ) {
-						$args = array();
-						
-						if ( $instance['authors_mode'] == 'include' ) {
-							$args['include'] = implode( ", ", $instance['authors'] );
-						} else {
-							$args['exclude'] = implode( ", ", $instance['authors'] );
-						}
-						
-						if ( $instance['allow_multiple_authors'] ) {
-							?>
-							Show only these authors:
-							<ul>
-								<?php
-								foreach ( get_users( $args ) as $index => $user ) {
-									?>
-									<li>
-										<label>
-											<input type="checkbox" name="sersf_authors[]" value="<?php echo $user->ID; ?>" <?php checked( in_array( $user->ID, $search['sersf_authors'] ) ); ?> />
-											 <?php echo $user->display_name; ?>
-										</label>
-									</li>
-									<?php
-								}
-								?>
-							</ul>
-							<?php
-						} else {
-							?>
-							Show only this author:
-							<select name="sersf_authors[]">
-								<option value="">All</option>
-								<?php
-								foreach ( get_users( $args ) as $index => $user ) {
-									?>
-									<option value="<?php echo $user->ID; ?>" <?php selected( $user->ID == $search['sersf_authors'][0] ); ?>>
-										<?php echo $user->display_name; ?>
+				<?php if ( $instance['enable_sort'] ): ?>
+					<div class="sersf-sort">
+						Sort By
+						<br />
+						<?php if ( $instance['enable_orderby'] ): ?>
+							<select name="sersf_orderby" class="sersf-orderby">
+								<?php if ( $instance['enable_relevanssi'] && self::$plugins['relevanssi'] ): ?>
+									<option value="relevanssi" <?php selected( $search['sersf_orderby'] == "relevanssi" ); ?>>
+										Relevance
 									</option>
-									<?php
-								}
+								<?php endif; ?>
+								<?php if ( $instance['enable_time'] ): ?>
+									<option value="date" <?php selected( $search['sersf_orderby'] == "date" ); ?>>
+										Date Posted
+									</option>
+								<?php endif; ?>
+								<?php if ( $instance['enable_alpha'] ): ?>
+									<option value="name" <?php selected( $search['sersf_orderby'] == "name" ); ?>>
+										Alphabetical
+									</option>
+								<?php endif; ?>
+								<?php if ( $instance['enable_modified'] ): ?>
+									<option value="modified" <?php selected( $search['sersf_orderby'] == "modified" ); ?>>
+										Date Updated
+									</option>
+								<?php endif; ?>
+								<?php
+									if ( $instance['enable_evaluate'] && self::$plugins['evaluate'] ) {
+										$metric_ids = '"' . implode( '", "', $instance['metrics'] ) . '"';
+										$metrics = $wpdb->get_results( 'SELECT id, nicename FROM '.EVAL_DB_METRICS.' WHERE id IN ('.$metric_ids.') AND type != "poll"' );
+										
+										foreach ( $metrics as $index => $metric ) {
+											?>
+											<option value="evaluate/<?php echo $metric->id; ?>" <?php selected( $search['sersf_orderby'] == "evaluate/".$metric->id ); ?>>
+												Rating (<?php echo $metric->nicename; ?>)
+											</option>
+											<?php
+										}
+									}
 								?>
 							</select>
-							<br />
-							<?php
-						}
-					}
-				?>
-				<?php
-					if ( $instance['enable_categories'] ) {
-						$args = array();
-						
-						if ( $instance['categories_mode'] == 'include' ) {
-							$args['include'] = implode( ",", $instance['categories'] );
-						} else {
-							$args['exclude'] = implode( ",", $instance['categories'] );
-						}
-						
-						if ( $instance['allow_multiple_categories'] ) {
-							?>
-							Show only these categories:
-							<ul>
-								<?php
-								foreach ( get_categories( $args ) as $index => $category ) {
-									?>
-									<li>
-										<label>
-											<input type="checkbox" name="sersf_categories[]" value="<?php echo $category->term_id; ?>" <?php checked( in_array( $category->term_id, $search['sersf_categories'] ) ); ?> />
-											 <?php echo $category->name; ?>
-										</label>
-									</li>
-									<?php
-								}
-								?>
-							</ul>
-							<?php
-						} else {
-							?>
-							Show only this category:
-							<select name="sersf_categories[]">
-								<option value="">All</option>
-								<?php
-								foreach ( get_categories( $args ) as $index => $category ) {
-									?>
-									<option value="<?php echo $category->term_id; ?>" <?php selected( $category->term_id == $search['sersf_categories'][0] ); ?>>
-										<?php echo $category->name; ?>
-									</option>
-									<?php
-								}
-								?>
+						<?php endif; ?>
+						<?php if ( $instance['enable_order'] ): ?>
+							<select name="sersf_order" class="sersf-order">
+								<option value="ASC" <?php selected( $search['sersf_order'] == "ASC" ); ?>>
+									Ascending
+								</option>
+								<option value="DESC" <?php selected( $search['sersf_order'] == "DESC" ); ?>>
+									Descending
+								</option>
 							</select>
-							<br />
-							<?php
-						}
-					}
-				?>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
 			</div>
-			<?php endif; ?>
-			
+			<div class="sersf-section">
+				<?php if ( $instance['enable_filter'] ): ?>
+					<div class="sersf-filter">
+						<?php
+							if ( $instance['enable_authors'] ) {
+								$args = array();
+								
+								if ( $instance['authors_mode'] == 'include' ) {
+									$args['include'] = implode( ", ", $instance['authors'] );
+								} else {
+									$args['exclude'] = implode( ", ", $instance['authors'] );
+								}
+								
+								if ( $instance['allow_multiple_authors'] ) {
+									?>
+									<span class="sersf-desktop">
+										Show only these authors:
+										<ul>
+											<?php
+											foreach ( get_users( $args ) as $index => $user ) {
+												?>
+												<li>
+													<label>
+														<input type="checkbox" name="sersf_authors[]" value="<?php echo $user->ID; ?>" <?php checked( in_array( $user->ID, $search['sersf_authors'] ) ); ?> />
+														 <?php echo $user->display_name; ?>
+													</label>
+												</li>
+												<?php
+											}
+											?>
+										</ul>
+									</span>
+									<?php
+									$multiple = true;
+								} else {
+									$multiple = false;
+								}
+								?>
+								<span class="<?php echo ( $multiple ? "sersf-mobile" : "" ); ?>">
+									Show only this author:
+									<select name="sersf_authors[]">
+										<option value="">All</option>
+										<?php
+										foreach ( get_users( $args ) as $index => $user ) {
+											?>
+											<option value="<?php echo $user->ID; ?>" <?php selected( $user->ID == $search['sersf_authors'][0] ); ?>>
+												<?php echo $user->display_name; ?>
+											</option>
+											<?php
+										}
+										?>
+									</select>
+								</span>
+								<br />
+								<?php
+							}
+						?>
+						<?php
+							if ( $instance['enable_categories'] ) {
+								$args = array();
+								
+								if ( $instance['categories_mode'] == 'include' ) {
+									$args['include'] = implode( ",", $instance['categories'] );
+								} else {
+									$args['exclude'] = implode( ",", $instance['categories'] );
+								}
+								
+								if ( $instance['allow_multiple_categories'] ) {
+									?>
+									<span class="sersf-desktop">
+										Show only these categories:
+										<ul>
+											<?php
+											foreach ( get_categories( $args ) as $index => $category ) {
+												?>
+												<li>
+													<label>
+														<input type="checkbox" name="sersf_categories[]" value="<?php echo $category->term_id; ?>" <?php checked( in_array( $category->term_id, $search['sersf_categories'] ) ); ?> />
+														 <?php echo $category->name; ?>
+													</label>
+												</li>
+												<?php
+											}
+											?>
+										</ul>
+									</span>
+									<?php
+									$multiple = true;
+								} else {
+									$multiple = false;
+								}
+								?>
+								<span class="<?php echo ( $multiple ? "sersf-mobile" : "" ); ?>">
+									Show only this category:
+									<select name="sersf_categories[]">
+										<option value="">All</option>
+										<?php
+										foreach ( get_categories( $args ) as $index => $category ) {
+											?>
+											<option value="<?php echo $category->term_id; ?>" <?php selected( $category->term_id == $search['sersf_categories'][0] ); ?>>
+												<?php echo $category->name; ?>
+											</option>
+											<?php
+										}
+										?>
+									</select>
+								</span>
+								<br />
+								<?php
+							}
+						?>
+					</div>
+				<?php endif; ?>
+			</div>
+			<div class="clearfix"></div>
 			<?php if ( ! $instance['autorefresh'] ): ?>
 				<input type="submit" class="btn" value="Search" />
 			<?php endif; ?>
-			
-			<br />
 		</form>
 		<?php
 	}

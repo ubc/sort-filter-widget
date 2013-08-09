@@ -18,3 +18,24 @@
 .sersf-sort {
     margin-bottom: 10px;
 }
+
+.sersf-section {
+    max-width: 250px;
+    float: left;
+}
+
+.clearfix:after {
+    clear: both;
+}
+
+@media (min-width: 767px) {
+    .sersf-mobile {
+        display: none;
+    }
+}
+
+@media (max-width: 767px) {
+    .sersf-desktop {
+        display: none;
+    }
+}
