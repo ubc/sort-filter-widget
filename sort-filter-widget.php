@@ -91,7 +91,7 @@ class Sort_Filter_Widget extends WP_Widget {
 	}
 	
 	public function __construct() {
-		parent::__construct( 'sersf', 'Sort/Filter', array(
+		parent::__construct( 'sersf', 'Search/Sort/Filter', array(
 			'description' => __( 'For sorting and filtering search results.', 'sersf' ),
 		) );
 	}
@@ -100,13 +100,6 @@ class Sort_Filter_Widget extends WP_Widget {
 		ob_start();
 		self::widget( null, self::parse( $atts ) );
 		return ob_get_clean();
-	}
-
-	public function update( $new_instance, $old_instance ) {
-		error_log("update");
-		error_log( print_r( $new_instance, TRUE ) );
-		//return array_merge( $old_instance, $new_instance );
-		return array_merge( $old_instance, self::parse( $new_instance ) );
 	}
 
 	public function widget( $args, $instance ) {
@@ -298,10 +291,12 @@ class Sort_Filter_Widget extends WP_Widget {
 		$instance = wp_parse_args( (array) $instance, self::$setting_defaults );
 		
 		?>
+		<!-- Not Implemented
 		<div>
 			<?php self::checkbox( 'autorefresh', "Auto Refresh", $instance ); ?>
 		</div>
 		<hr />
+		-->
 		<div>
 			<?php self::checkbox( 'enable_sort', "Enable Sorting", $instance ); ?>
 			<div class="sersf-indent">
@@ -370,7 +365,7 @@ class Sort_Filter_Widget extends WP_Widget {
 								Include These Categories
 							</option>
 						</select>
-						<input id="<?php echo $this->get_field_id('categories'); ?>" name="<?php echo $this->get_field_name('categories'); ?>" type="text" value="<?php echo implode( ", ", $instance['enable_tagging'] ); ?>" />
+						<input id="<?php echo $this->get_field_id('categories'); ?>" name="<?php echo $this->get_field_name('categories'); ?>" type="text" value="<?php echo implode( ", ", $instance['categories'] ); ?>" />
 						<br />
 						<small>
 							A comma seperated list of category ids.
@@ -392,17 +387,19 @@ class Sort_Filter_Widget extends WP_Widget {
 		</label>
 		<?php
 	}
+
+	public function update( $new_instance, $old_instance ) {
+		return array_merge( $old_instance, self::parse( $new_instance ) );
+	}
 	
 	private function parse( $args ) {
-		foreach ( $args as $key => $value ) {
-			if ( isset( $args[$key] ) ) {
-				if ( is_array( self::$setting_defaults[$key] ) ) {
-					$args[$key] = self::parse_csv( $args[$key] );
-				} elseif ( is_bool( self::$setting_defaults[$key] ) ) {
-					$args[$key] = self::parse_bool( $args[$key] );
-				} elseif ( self::$setting_defaults[$key] == 'include' || self::$setting_defaults[$key] == 'exclude' ) {
-					$args[$key] = self::parse_include( $args[$key] );
-				}
+		foreach ( self::$setting_defaults as $key => $value ) {
+			if ( is_array( self::$setting_defaults[$key] ) ) {
+				$args[$key] = self::parse_csv( $args[$key] );
+			} elseif ( is_bool( self::$setting_defaults[$key] ) ) {
+				$args[$key] = self::parse_bool( $args[$key] );
+			} elseif ( self::$setting_defaults[$key] == 'include' || self::$setting_defaults[$key] == 'exclude' ) {
+				$args[$key] = self::parse_include( $args[$key] );
 			}
 		}
 		
