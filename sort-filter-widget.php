@@ -34,52 +34,52 @@ class Sort_Filter_Widget extends WP_Widget {
 		'allow_multiple_authors'    => true,
 		'allow_multiple_categories' => true,
 	);
-	
+
 	static $search_defaults = array(
 		'sersf_orderby'    => 'date',
 		'sersf_order'      => 'DESC',
 		'sersf_authors'    => array(),
 		'sersf_categories' => array(),
 	);
-	
+
 	static $search = array();
-	
+
 	/**
 	 * init function.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @return void
 	 */
 	public static function init() {
 		add_shortcode( 'sort_filter_form', array( __CLASS__, 'shortcode' ) );
-		
+
 		add_action( 'widgets_init', array( __CLASS__, 'register' ) );
 		add_action( 'init', array( __CLASS__, 'load' ) );
 	}
-	
+
 	public static function register() {
 		register_widget( __CLASS__ );
 		self::register_scripts_and_styles();
 	}
-	
+
 	public static function load() {
 		self::$plugins['relevanssi'] = defined( "RELEVANSSI_PREMIUM" );
 		self::$plugins['evaluate'] = defined( "EVAL_BASENAME" );
-		
+
 		if ( self::$plugins['relevanssi'] ) {
 			self::$search_defaults['sersf_orderby'] = "relevanssi";
 			add_action( 'relevanssi_hits_filter', array( __CLASS__, 'modify_results_relevanssi' ) );
 		} else {
 			add_action( 'pre_get_posts', array( __CLASS__, 'modify_results' ) );
 		}
-		
+
 		self::$search = wp_parse_args( $_GET, self::$search_defaults );
 	}
-	
+
 	/**
 	 * register_script function.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @return void
@@ -89,13 +89,13 @@ class Sort_Filter_Widget extends WP_Widget {
 		wp_register_style( 'sersf-admin' , plugins_url( 'css/admin.css', __FILE__ ) );
 		wp_register_style( 'sersf-view'  , plugins_url( 'css/view.css', __FILE__ ) );
 	}
-	
+
 	public function __construct() {
 		parent::__construct( 'sersf', 'Search / Sort / Filter', array(
 			'description' => __( 'For sorting and filtering search results.', 'sersf' ),
 		) );
 	}
-	
+
 	public static function shortcode( $atts, $content ) {
 		ob_start();
 		self::widget( null, self::parse( $atts, false ) );
@@ -105,22 +105,23 @@ class Sort_Filter_Widget extends WP_Widget {
 	public function widget( $args, $instance ) {
 		global $wpdb;
 		wp_enqueue_style( "sersf-view" );
-		
+
 		$instance = wp_parse_args( (array) $instance, self::$setting_defaults );
 		$search = self::$search;
-		
+
 		// TEMPORARY CODE
 		// Currently the autorefresh feature hasn't been implemented
 		$instance['autorefresh'] = false;
 		// END TEMPORARY CODE
-		
+
+		$searched = ( isset( $_GET['s'] ) ) ? sanitize_text_field( $_GET['s'] ) : '';
 		?>
 		<!--<form class="sersf" method="POST">-->
 		<form role="search" class="sersf" method="get" action="<?php echo trailingslashit( home_url() ); ?>">
 			<div class="sersf-section">
 				<div class="sersf-search">
 					<label class="screen-reader-text" for="s">Search for:</label>
-					<input type="text" value="<?php echo $_GET['s']; ?>" name="s" id="s">
+					<input type="text" value="<?php echo $searched; ?>" name="s" id="s">
 				</div>
 				<?php if ( $instance['enable_sort'] ): ?>
 					<div class="sersf-sort">
@@ -152,7 +153,7 @@ class Sort_Filter_Widget extends WP_Widget {
 									if ( $instance['enable_evaluate'] && self::$plugins['evaluate'] ) {
 										$metric_ids = '"' . implode( '", "', $instance['metrics'] ) . '"';
 										$metrics = $wpdb->get_results( 'SELECT id, nicename FROM '.EVAL_DB_METRICS.' WHERE id IN ('.$metric_ids.') AND type != "poll"' );
-										
+
 										foreach ( $metrics as $index => $metric ) {
 											?>
 											<option value="evaluate/<?php echo $metric->id; ?>" <?php selected( $search['sersf_orderby'] == "evaluate/".$metric->id ); ?>>
@@ -183,13 +184,13 @@ class Sort_Filter_Widget extends WP_Widget {
 						<?php
 							if ( $instance['enable_authors'] ) {
 								$args = array();
-								
+
 								if ( $instance['authors_mode'] == 'include' ) {
 									$args['include'] = implode( ", ", $instance['authors'] );
 								} else {
 									$args['exclude'] = implode( ", ", $instance['authors'] );
 								}
-								
+
 								if ( $instance['allow_multiple_authors'] ) {
 									?>
 									<span class="sersf-desktop">
@@ -221,8 +222,9 @@ class Sort_Filter_Widget extends WP_Widget {
 										<option value="">All</option>
 										<?php
 										foreach ( get_users( $args ) as $index => $user ) {
+											$sel_user = ( isset( $search['sersf_authors'][0] ) ) ? $search['sersf_authors'][0] : 0;
 											?>
-											<option value="<?php echo $user->ID; ?>" <?php selected( $user->ID == $search['sersf_authors'][0] ); ?>>
+											<option value="<?php echo $user->ID; ?>" <?php selected( $user->ID == $sel_user ); ?>>
 												<?php echo $user->display_name; ?>
 											</option>
 											<?php
@@ -237,13 +239,13 @@ class Sort_Filter_Widget extends WP_Widget {
 						<?php
 							if ( $instance['enable_categories'] ) {
 								$args = array();
-								
+
 								if ( $instance['categories_mode'] == 'include' ) {
 									$args['include'] = implode( ",", $instance['categories'] );
 								} else {
 									$args['exclude'] = implode( ",", $instance['categories'] );
 								}
-								
+
 								if ( $instance['allow_multiple_categories'] ) {
 									?>
 									<span class="sersf-desktop">
@@ -275,8 +277,9 @@ class Sort_Filter_Widget extends WP_Widget {
 										<option value="">All</option>
 										<?php
 										foreach ( get_categories( $args ) as $index => $category ) {
+											$sel_cat = ( isset( $search['sersf_categories'][0] ) ) ? $search['sersf_categories'][0] : 0;
 											?>
-											<option value="<?php echo $category->term_id; ?>" <?php selected( $category->term_id == $search['sersf_categories'][0] ); ?>>
+											<option value="<?php echo $category->term_id; ?>" <?php selected( $category->term_id == $sel_cat ); ?>>
 												<?php echo $category->name; ?>
 											</option>
 											<?php
@@ -301,9 +304,9 @@ class Sort_Filter_Widget extends WP_Widget {
 
  	public function form( $instance ) {
 		wp_enqueue_style( "sersf-admin" );
-		
+
 		$instance = wp_parse_args( (array) $instance, self::$setting_defaults );
-		
+
 		?>
 		<!-- Not Implemented
 		<div>
@@ -329,7 +332,7 @@ class Sort_Filter_Widget extends WP_Widget {
 						<?php self::checkbox( 'enable_evaluate', "By Rating", $instance, ! self::$plugins['evaluate'] ); ?>
 						<br />
 						<label for="<?php echo $this->get_field_id('metrics'); ?>">
-							Allowed Metrics: 
+							Allowed Metrics:
 							<input id="<?php echo $this->get_field_id('metrics'); ?>" name="<?php echo $this->get_field_name('metrics'); ?>" type="text" value="<?php echo implode( ", ", $instance['metrics'] ); ?>" />
 						</label>
 						<br />
@@ -392,7 +395,7 @@ class Sort_Filter_Widget extends WP_Widget {
 		</div>
 		<?php
 	}
-	
+
 	private function checkbox( $slug, $text, $instance, $disabled = false ) {
 		?>
 		<label for="<?php echo $this->get_field_id( $slug ); ?>">
@@ -405,15 +408,20 @@ class Sort_Filter_Widget extends WP_Widget {
 	public function update( $new_instance, $old_instance ) {
 		return array_merge( $old_instance, self::parse( $new_instance ) );
 	}
-	
+
 	private function parse( $args, $all = true ) {
 		if ( $all ) {
 			$list = self::$setting_defaults;
 		} else {
 			$list = $args;
 		}
-		
+
 		foreach ( $list as $key => $value ) {
+
+			if ( ! isset( $args[ $key ] ) ) {
+				continue;
+			}
+
 			if ( is_array( self::$setting_defaults[$key] ) ) {
 				$args[$key] = self::parse_csv( $args[$key] );
 			} elseif ( is_bool( self::$setting_defaults[$key] ) ) {
@@ -422,91 +430,91 @@ class Sort_Filter_Widget extends WP_Widget {
 				$args[$key] = self::parse_include( $args[$key] );
 			}
 		}
-		
+
 		return $args;
 	}
-	
+
 	private function parse_bool( $string ) {
 		return $string === "true" || $string === true || $string === "on";
 	}
-	
+
 	private function parse_include( $string ) {
 		return $string === 'include' ? 'include' : 'exclude';
 	}
-	
+
 	private function parse_csv( $string ) {
 		$array = array();
 		foreach ( explode( ",", $string ) as $index => $value ) {
 			$array[] = trim( $value );
 		}
-		
+
 		return $array;
 	}
-	
+
 	public static function modify_results() {
 		global $wp_query;
-		
+
 		$search = self::$search;
-		
+
 		if ( ! empty( $search['sersf_categories'] ) ) {
 			$wp_query->set( 'cat', implode( ",", $search['sersf_categories'] ) );
 		}
-		
+
 		if ( ! empty( $search['sersf_authors'] ) ) {
 			$wp_query->set( 'author', implode( ",", $search['sersf_authors'] ) );
 		}
-		
+
 		if ( ! empty( $search['sersf_order'] ) ) {
 			$wp_query->set( 'order',  $search['sersf_order'] );
 		}
-		
+
 		$split = explode( "/", $search['sersf_orderby'] );
-		$orderby = $split[0];
-		$param = $split[1];
-		
+		$orderby = isset( $split[0] ) ? $split[0] : '';
+		$param = isset( $split[1] ) ? $split[1] : false;
+
 		switch ( $orderby ) {
 			case 'evaluate':
 				$wp_query->set( 'orderby', 'meta_value_num' );
 				$wp_query->set( 'meta_key', 'metric-'.$param.'-score' );
-				
+
 				break;
 			default:
 				$wp_query->set( 'orderby', $search['sersf_orderby'] );
 				break;
 		}
 	}
-	
+
 	private static $param;
 	private static $order;
-	
+
 	public static function modify_results_relevanssi( $args ) {
 		$hits = $args[0];
 		$search = self::$search;
-		
+
 		$authors = array_filter( $search['sersf_authors'] );
 		$categories = array_filter( $search['sersf_categories'] );
-		
+
 		foreach ( $hits as $index => $post ) {
 			$accept = true;
-			
+
 			if ( ! empty( $authors ) ) {
 				$accept &= in_array( $post->post_author, $authors );
 			}
-			
+
 			if ( ! empty( $categories ) ) {
 				$accept &= count( array_intersect( wp_get_post_categories( $post->ID ), $categories ) ) > 0;
 			}
-			
+
 			if ( ! $accept ) {
 				unset( $hits[$index] );
 			}
 		}
-		
+
 		$split = explode( "/", $search['sersf_orderby'] );
 		$orderby = $split[0];
 		self::$param = $split[1];
 		self::$order = ( $search['sersf_order'] == 'DESC' ? 1 : -1 );
-		
+
 		switch ( $orderby ) {
 			case 'evaluate':
 				$func = array( __CLASS__, 'filter_evaluate' );
@@ -524,37 +532,37 @@ class Sort_Filter_Widget extends WP_Widget {
 				$func = null;
 				break;
 		}
-		
+
 		if ( $func != null ) {
 			usort( $hits, $func );
 		}
-		
+
 		return array( $hits );
 	}
-	
+
 	private static function sort_evaluate( $a, $b ) {
 		$rating_a = get_post_meta( $a->ID, 'metric-'.self::$param.'-score', true );
 		$rating_b = get_post_meta( $b->ID, 'metric-'.self::$param.'-score', true );
-		
+
 		if ( $rating_a == $rating_b ) {
 			$return = 0;
 		} else {
 			$return = $rating_a < $rating_b ? 1 : -1;
 		}
-		
+
 		return self::$order * $return;
 	}
-	
+
 	private static function sort_date( $a, $b ) {
 		$return = strnatcmp( $b->post_date, $a->post_date );
 		return self::$order * $return;
 	}
-	
+
 	private static function sort_modified( $a, $b ) {
 		$return = strnatcmp( $b->post_modified, $a->post_modified );
 		return self::$order * $return;
 	}
-	
+
 	private static function sort_name( $a, $b ) {
 		$return = strnatcmp( $a->post_title, $b->post_title );
 		return self::$order * $return;
